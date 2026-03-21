@@ -1,0 +1,5 @@
+if(EXISTS "/Users/lim/Desktop/pos_system/build/tests/pos_tests[1]_tests.cmake")
+  include("/Users/lim/Desktop/pos_system/build/tests/pos_tests[1]_tests.cmake")
+else()
+  add_test(pos_tests_NOT_BUILT pos_tests_NOT_BUILT)
+endif()
