@@ -22,6 +22,7 @@ int getChoice()
         {
              std::cout << "number is invalid please try again" <<  std::endl;
              std::cout << "choose your number again : " << std::endl;
+             std::cout << "test test : " << std::endl;
         }
     }
 }
