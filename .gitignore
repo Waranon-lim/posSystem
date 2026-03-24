@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# CMake build output
+build/
+
+# Compiled output
+src/output/
+
+# VS Code machine-specific
+.vscode/c_cpp_properties.json
+.vscode/launch.json
