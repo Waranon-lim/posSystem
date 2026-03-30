@@ -93,10 +93,11 @@ void registerAccount() {
         return;
     }
 
+    long long int hashed_pw = generateHash(password);
    
     std::stringstream ss;
     ss << "INSERT INTO users (username, password) VALUES ('" 
-       << username << "', '" << password << "');"; 
+       << username << "', " << hashed_pw << ");";
 
     std::string sql = ss.str();
     char* errorMessage = nullptr;
@@ -114,7 +115,7 @@ void registerAccount() {
 
 // -------------------------------login function -------------------------------
 
-bool loginUser(sqlite3 *db, const std::string &username, const std::string &password)
+bool loginUser(sqlite3 *db, const std::string &username, long long int &password)
 {
     sqlite3_stmt *stmt;
 
@@ -126,8 +127,7 @@ bool loginUser(sqlite3 *db, const std::string &username, const std::string &pass
     }
 
     sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, password.c_str(), -1, SQLITE_STATIC);
-
+   sqlite3_bind_int64(stmt, 2, password);
     bool success = false;
 
     if (sqlite3_step(stmt) == SQLITE_ROW)
@@ -137,4 +137,25 @@ bool loginUser(sqlite3 *db, const std::string &username, const std::string &pass
 
     sqlite3_finalize(stmt);
     return success;
+}
+
+void loginFlow(sqlite3 *db)
+{
+    std::string username, password;
+    std::cout << "----- login page -----" << std::endl;
+    std::cout << "enter your username : ";
+    std::cin >> username;
+    std::cout << "enter your password : ";
+    std::cin >> password;
+
+    long long int hashPass = generateHash(password);
+
+    if (loginUser(db, username, hashPass))
+    {
+        std::cout << "welcome " << username << std::endl;
+    }
+    else
+    {
+        std::cout << "username or password incorrect" << std::endl;
+    }
 }

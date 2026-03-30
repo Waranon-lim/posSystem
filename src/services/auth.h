@@ -9,4 +9,5 @@ void initDatabase();
 
 // -------------------------------login function -------------------------------
 
+void loginFlow(sqlite3 *db);
 bool loginUser(sqlite3* db, const std::string& username, const std::string& password);

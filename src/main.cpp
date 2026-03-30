@@ -20,19 +20,7 @@ int main()
             registerAccount();
             break;
         case 2:
-            std::cout << "----- login page -----" << std::endl;
-            std::cout << "enter your username : ";
-            std::cin >> username;
-            std::cout << "enter your password : ";
-            std::cin >> password;
-            if (loginUser(db, username, password))
-            {
-                std::cout << "welcome " << username << std::endl;
-            }
-            else
-            {
-                std::cout << "username or password incorrect" << std::endl;
-            }
+          loginFlow(db);
             break;
         case 3:
             cout << "---your loging out---";
