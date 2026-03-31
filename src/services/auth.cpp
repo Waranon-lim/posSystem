@@ -3,7 +3,7 @@
 #include <sstream>
 #include <sqlite3.h>
 
-extern sqlite3* db; // tell this file that db will import from another file
+extern sqlite3 *db; // tell this file that db will import from another file
 
 bool isNameExit(std::string username)
 {
@@ -21,9 +21,9 @@ bool isNameExit(std::string username)
             count = sqlite3_column_int(stmt, 0);
         }
     }
-    
+
     sqlite3_finalize(stmt);
-    
+
     return (count > 0);
 }
 
@@ -35,7 +35,7 @@ void initDatabase()
         std::string sql = "CREATE TABLE IF NOT EXISTS users ("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                           "username TEXT UNIQUE NOT NULL, "
-                          "password TEXT NOT NULL, " 
+                          "password TEXT NOT NULL, "
                           "role TEXT DEFAULT 'customer', "
                           "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
 
@@ -46,7 +46,6 @@ void initDatabase()
             std::cerr << "Error Creating Table: " << errorMessage << std::endl;
             sqlite3_free(errorMessage);
         }
-        
     }
 }
 
@@ -62,55 +61,65 @@ long long int generateHash(std::string password)
     return hash;
 }
 
-
-void registerAccount() {
+void registerAccount()
+{
     std::string username, password, confirmPassword;
     bool nameExits = false;
 
-   
-    do {
+    do
+    {
+        std::cout << "  TIP: type 'back' to return to main menu " << std::endl;
+        std::cout << "------------------------------------------" << std::endl;
         std::cout << "Enter your username : ";
         std::cin >> username;
-        nameExits = isNameExit(username); 
-        if (nameExits) {
+        if (username == "back" || username == "Back")
+            return;
+        nameExits = isNameExit(username);
+        if (nameExits)
+        {
             std::cout << "This name already exists, please try again." << std::endl;
         }
     } while (nameExits);
 
-    do {
+    do
+    {
         std::cout << "Enter your password : ";
         std::cin >> password;
         std::cout << "Confirm your password : ";
         std::cin >> confirmPassword;
 
-        if (password != confirmPassword) {
+        if (password != confirmPassword)
+        {
             std::cout << "Passwords do not match, please try again." << std::endl;
         }
     } while (password != confirmPassword);
 
-    if (db == nullptr) {
+    if (db == nullptr)
+    {
         std::cerr << "Database not initialized!" << std::endl;
         return;
     }
 
     long long int hashed_pw = generateHash(password);
-   
+
     std::stringstream ss;
-    ss << "INSERT INTO users (username, password) VALUES ('" 
+    ss << "INSERT INTO users (username, password) VALUES ('"
        << username << "', " << hashed_pw << ");";
 
     std::string sql = ss.str();
-    char* errorMessage = nullptr;
+    char *errorMessage = nullptr;
 
     int exit = sqlite3_exec(db, sql.c_str(), NULL, 0, &errorMessage);
 
-    if (exit != SQLITE_OK) {
+    if (exit != SQLITE_OK)
+    {
         std::cerr << "SQL Error: " << errorMessage << std::endl;
         sqlite3_free(errorMessage);
-    } else {
+    }
+    else
+    {
         std::cout << "Success! Your account has been created: " << username << std::endl;
     }
-   
 }
 
 // -------------------------------login function -------------------------------
@@ -127,7 +136,7 @@ bool loginUser(sqlite3 *db, const std::string &username, long long int &password
     }
 
     sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
-   sqlite3_bind_int64(stmt, 2, password);
+    sqlite3_bind_int64(stmt, 2, password);
     bool success = false;
 
     if (sqlite3_step(stmt) == SQLITE_ROW)
@@ -141,21 +150,34 @@ bool loginUser(sqlite3 *db, const std::string &username, long long int &password
 
 void loginFlow(sqlite3 *db)
 {
+
+    bool loginSuccess = false;
     std::string username, password;
-    std::cout << "----- login page -----" << std::endl;
-    std::cout << "enter your username : ";
-    std::cin >> username;
-    std::cout << "enter your password : ";
-    std::cin >> password;
 
-    long long int hashPass = generateHash(password);
+    while (!loginSuccess)
+    {
+        std::cout << "----- login page -----" << std::endl;
+        std::cout << "  TIP: type 'back' to return to main menu " << std::endl;
+        std::cout << "------------------------------------------" << std::endl;
+        std::cout << "Enter your username : ";
+        std::cin >> username;
 
-    if (loginUser(db, username, hashPass))
-    {
-        std::cout << "welcome " << username << std::endl;
-    }
-    else
-    {
-        std::cout << "username or password incorrect" << std::endl;
+        if (username == "back" || username == "Back")
+            return;
+
+        std::cout << "enter your password : ";
+        std::cin >> password;
+
+        long long int hashPass = generateHash(password);
+
+        if (loginUser(db, username, hashPass))
+        {
+            std::cout << "welcome " << username << std::endl;
+            loginSuccess = true;
+        }
+        else
+        {
+            std::cout << "username or password incorrect" << std::endl;
+        }
     }
 }

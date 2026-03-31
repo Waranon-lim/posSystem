@@ -8,9 +8,9 @@ using namespace std;
 sqlite3 *db;
 int main()
 {
+    initDatabase();
     while (true)
     {
-        initDatabase();
         showMenu();
         int choice = getChoice();
         std::string username, password;
