@@ -68,6 +68,7 @@ void registerAccount()
 
     do
     {
+        std::cout << "------------------------------------------" << std::endl;
         std::cout << "  TIP: type 'back' to return to main menu " << std::endl;
         std::cout << "------------------------------------------" << std::endl;
         std::cout << "Enter your username : ";
@@ -156,9 +157,10 @@ void loginFlow(sqlite3 *db)
 
     while (!loginSuccess)
     {
-        std::cout << "----- login page -----" << std::endl;
+        std::cout << "------------------------------------------" << std::endl;
         std::cout << "  TIP: type 'back' to return to main menu " << std::endl;
         std::cout << "------------------------------------------" << std::endl;
+        std::cout << "----- login page -----" << std::endl;
         std::cout << "Enter your username : ";
         std::cin >> username;
 
