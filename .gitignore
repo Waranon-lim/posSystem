@@ -42,5 +42,6 @@ googletest/
 user.db
 pos_system
 test
+*.db
 
 # End of https://www.toptal.com/developers/gitignore/api/c++
