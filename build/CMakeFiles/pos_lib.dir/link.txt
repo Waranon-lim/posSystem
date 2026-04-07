@@ -1,2 +1,0 @@
-/usr/bin/ar qc libpos_lib.a CMakeFiles/pos_lib.dir/src/db/database.cpp.o CMakeFiles/pos_lib.dir/src/repositories/product_repositories.cpp.o CMakeFiles/pos_lib.dir/src/repositories/sale_repository.cpp.o CMakeFiles/pos_lib.dir/src/services/product_service.cpp.o CMakeFiles/pos_lib.dir/src/services/sale_service.cpp.o
-/usr/bin/ranlib libpos_lib.a
