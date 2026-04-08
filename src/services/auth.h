@@ -1,6 +1,7 @@
 #pragma once
-#include<string>
 #include <sqlite3.h>
+
+#include <string>
 
 bool isNameExit(std::string username);
 void registerAccount();
@@ -9,5 +10,6 @@ void initDatabase();
 
 // -------------------------------login function -------------------------------
 
-void loginFlow(sqlite3 *db);
-bool loginUser(sqlite3* db, const std::string& username, const std::string& password);
+void loginFlow(sqlite3* db);
+bool loginUser(sqlite3* db, const std::string& username,
+               long long int& password);

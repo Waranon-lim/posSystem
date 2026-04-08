@@ -1,12 +1,14 @@
 #include "auth.h"
-#include <iostream>
+
 #include <sqlite3.h>
+
+#include <iostream>
 #include <sstream>
 
-extern sqlite3 *db; // tell this file that db will import from another file
+extern sqlite3* db;  // tell this file that db will import from another file
 
 bool isNameExit(std::string username) {
-  sqlite3_stmt *stmt;
+  sqlite3_stmt* stmt;
   int count = 0;
 
   std::stringstream ss;
@@ -25,14 +27,15 @@ bool isNameExit(std::string username) {
 }
 
 void initDatabase() {
-  char *errorMessage;
+  char* errorMessage;
   if (sqlite3_open("db/user.db", &db) == SQLITE_OK) {
-    std::string sql = "CREATE TABLE IF NOT EXISTS users ("
-                      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                      "username TEXT UNIQUE NOT NULL, "
-                      "password TEXT NOT NULL, "
-                      "role TEXT DEFAULT 'customer', "
-                      "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+    std::string sql =
+        "CREATE TABLE IF NOT EXISTS users ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "username TEXT UNIQUE NOT NULL, "
+        "password_hash TEXT NOT NULL, "
+        "role TEXT DEFAULT 'customer', "
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
 
     int exit = sqlite3_exec(db, sql.c_str(), NULL, 0, &errorMessage);
 
@@ -44,7 +47,6 @@ void initDatabase() {
 }
 
 long long int generateHash(std::string password) {
-
   long int hash = 0;
   long int prime = 31;
   for (int i = 0; i < password.length(); i++) {
@@ -63,8 +65,7 @@ void registerAccount() {
     std::cout << "------------------------------------------" << std::endl;
     std::cout << "Enter your username : ";
     std::cin >> username;
-    if (username == "back" || username == "Back")
-      return;
+    if (username == "back" || username == "Back") return;
     nameExits = isNameExit(username);
     if (nameExits) {
       std::cout << "This name already exists, please try again." << std::endl;
@@ -94,7 +95,7 @@ void registerAccount() {
      << hashed_pw << ");";
 
   std::string sql = ss.str();
-  char *errorMessage = nullptr;
+  char* errorMessage = nullptr;
 
   int exit = sqlite3_exec(db, sql.c_str(), NULL, 0, &errorMessage);
 
@@ -109,9 +110,9 @@ void registerAccount() {
 
 // -------------------------------login function -------------------------------
 
-bool loginUser(sqlite3 *db, const std::string &username,
-               long long int &password) {
-  sqlite3_stmt *stmt;
+bool loginUser(sqlite3* db, const std::string& username,
+               long long int& password) {
+  sqlite3_stmt* stmt;
 
   std::string sql = "SELECT id FROM users WHERE username = ? AND password = ?;";
 
@@ -131,8 +132,7 @@ bool loginUser(sqlite3 *db, const std::string &username,
   return success;
 }
 
-void loginFlow(sqlite3 *db) {
-
+void loginFlow(sqlite3* db) {
   bool loginSuccess = false;
   std::string username, password;
 
@@ -144,8 +144,7 @@ void loginFlow(sqlite3 *db) {
     std::cout << "Enter your username : ";
     std::cin >> username;
 
-    if (username == "back" || username == "Back")
-      return;
+    if (username == "back" || username == "Back") return;
 
     std::cout << "enter your password : ";
     std::cin >> password;
