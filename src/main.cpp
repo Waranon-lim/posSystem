@@ -1,25 +1,31 @@
-#include "services/menu.h"
-#include "services/auth.h"
+#include <sqlite3.h>
+
 #include <iostream>
+
+#include "services/auth.h"
+#include "services/menu.h"
 
 using namespace std;
 
-int main()
-{
-    initDatabase();
+sqlite3* db;
+int main() {
+  initDatabase();
+  while (true) {
     showMenu();
     int choice = getChoice();
-    switch (choice)
-    {
-    case 1:
+    std::string username, password;
+    switch (choice) {
+      case 1:
         registerAccount();
         break;
-    case 2:
-        cout << "call login function";
+      case 2:
+        loginFlow(db);
         break;
-    case 3:
+      case 3:
         cout << "---your loging out---";
+        sqlite3_close(db);
         return 0;
     }
-    return 0;
+  }
+  return 0;
 }
