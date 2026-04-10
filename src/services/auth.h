@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "db/auth_repository.h"
+#include "../db/auth_repository.h"
 
 // Service layer - handles business logic
 void initDatabase(sqlite3*& db);
