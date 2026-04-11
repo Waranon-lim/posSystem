@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 
 #include "../db/auth_repository.h"  // Include repo header for extern declaration

@@ -22,6 +22,11 @@ std::string promptForPassword() {
 }
 
 void registerAccount() {
+  if (!g_authRepo) {
+    std::cerr << "Repository is not initialized." << std::endl;
+    return;
+  }
+
   std::string username, password, confirmPassword;
   bool nameExists = false;
 
@@ -59,6 +64,11 @@ void registerAccount() {
 }
 
 void loginFlow() {
+  if (!g_authRepo) {
+    std::cerr << "Repository is not initialized." << std::endl;
+    return;
+  }
+
   bool loginSuccess = false;
   std::string username, password;
 
