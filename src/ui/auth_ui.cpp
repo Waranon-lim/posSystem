@@ -1,13 +1,11 @@
 #include "auth_ui.h"
 
-#include <sqlite3.h>
-
 #include <iostream>
 
 #include "../services/auth.h"
 
-// Global reference to repo - will be passed in from main
-extern AuthRepository* g_authRepo;
+// Global reference to repo - defined in main.cpp
+extern std::unique_ptr<AuthRepository> g_authRepo;
 
 std::string promptForUsername() {
   std::string username;
@@ -35,7 +33,7 @@ void registerAccount() {
     username = promptForUsername();
     if (username == "back" || username == "Back") return;
 
-    nameExists = g_authRepo->isUserExists(username);
+    nameExists = isUserExistsService(username, *g_authRepo);
     if (nameExists) {
       std::cout << "This name already exists, please try again." << std::endl;
     }

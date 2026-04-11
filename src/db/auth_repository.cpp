@@ -1,22 +1,30 @@
 #include "auth_repository.h"
 
 #include <iostream>
-#include <sstream>
+#include <stdexcept>
 
-AuthRepository::AuthRepository(sqlite3* db) : db_(db) {}
+AuthRepository::AuthRepository(sqlite3* db) : db_(db) {
+  if (!db_) {
+    throw std::invalid_argument("Database pointer cannot be null");
+  }
+}
 
-bool AuthRepository::isUserExists(const std::string& username) {
+bool AuthRepository::isUserExists(const std::string& username) const {
   sqlite3_stmt* stmt;
   int count = 0;
 
-  std::stringstream ss;
-  ss << "SELECT COUNT(*) FROM users WHERE username = '" << username << "';";
-  std::string query = ss.str();
+  // Use parameterized query to prevent SQL injection
+  const char* query = "SELECT COUNT(*) FROM users WHERE username = ?;";
 
-  if (sqlite3_prepare_v2(db_, query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-      count = sqlite3_column_int(stmt, 0);
-    }
+  if (sqlite3_prepare_v2(db_, query, -1, &stmt, nullptr) != SQLITE_OK) {
+    std::cerr << "SQL prepare error: " << sqlite3_errmsg(db_) << std::endl;
+    return false;
+  }
+
+  sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
+
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    count = sqlite3_column_int(stmt, 0);
   }
 
   sqlite3_finalize(stmt);
@@ -24,35 +32,43 @@ bool AuthRepository::isUserExists(const std::string& username) {
 }
 
 bool AuthRepository::saveUser(const std::string& username,
-                              long long int passwordHash) {
-  std::stringstream ss;
-  ss << "INSERT INTO users (username, password) VALUES ('" << username << "', "
-     << passwordHash << ");";
+                              sqlite3_int64 passwordHash) const {
+  // Use parameterized query to prevent SQL injection
+  const char* sql =
+      "INSERT INTO users (username, password_hash) VALUES (?, ?);";
+  sqlite3_stmt* stmt;
 
-  std::string sql = ss.str();
-  char* errorMessage = nullptr;
-
-  int exit = sqlite3_exec(db_, sql.c_str(), NULL, 0, &errorMessage);
-
-  if (exit != SQLITE_OK) {
-    std::cerr << "SQL Error: " << errorMessage << std::endl;
-    sqlite3_free(errorMessage);
+  if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+    std::cerr << "SQL prepare error: " << sqlite3_errmsg(db_) << std::endl;
     return false;
   }
+
+  sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
+  sqlite3_bind_int64(stmt, 2, passwordHash);
+
+  if (sqlite3_step(stmt) != SQLITE_DONE) {
+    std::cerr << "SQL insert error: " << sqlite3_errmsg(db_) << std::endl;
+    sqlite3_finalize(stmt);
+    return false;
+  }
+
+  sqlite3_finalize(stmt);
   return true;
 }
 
 bool AuthRepository::authenticateUser(const std::string& username,
-                                      long long int passwordHash) {
+                                      sqlite3_int64 passwordHash) const {
   sqlite3_stmt* stmt;
 
-  std::string sql = "SELECT id FROM users WHERE username = ? AND password = ?;";
+  const char* sql =
+      "SELECT id FROM users WHERE username = ? AND password_hash = ?;";
 
-  if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+  if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+    std::cerr << "SQL prepare error: " << sqlite3_errmsg(db_) << std::endl;
     return false;
   }
 
-  sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
   sqlite3_bind_int64(stmt, 2, passwordHash);
   bool success = false;
 

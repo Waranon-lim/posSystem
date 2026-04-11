@@ -5,29 +5,39 @@
 #include <iostream>
 #include <sstream>
 
-long long int generateHash(std::string password) {
-  long int hash = 0;
-  long int prime = 31;
-  for (int i = 0; i < password.length(); i++) {
+// ⚠️ WARNING: Simple hash for learning purposes only.
+// For production, use bcrypt or argon2!
+sqlite3_int64 generateHash(const std::string& password) {
+  sqlite3_int64 hash = 0;
+  const sqlite3_int64 prime = 31;
+  for (size_t i = 0; i < password.length(); i++) {
     hash = (hash * prime) + password[i];
   }
   return hash;
 }
 
+bool isUserExistsService(const std::string& username,
+                         const AuthRepository& repo) {
+  if (username.empty()) {
+    return false;
+  }
+  return repo.isUserExists(username);
+}
+
 void initDatabase(sqlite3*& db) {
-  char* errorMessage;
+  char* errorMessage = nullptr;  // Initialize to null to prevent double-free
   if (sqlite3_open("db/user.db", &db) == SQLITE_OK) {
     std::string sql =
         "CREATE TABLE IF NOT EXISTS users ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "username TEXT UNIQUE NOT NULL, "
-        "password_hash TEXT NOT NULL, "
+        "password_hash INTEGER NOT NULL, "
         "role TEXT DEFAULT 'customer', "
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
 
-    int exit = sqlite3_exec(db, sql.c_str(), NULL, 0, &errorMessage);
+    int result = sqlite3_exec(db, sql.c_str(), NULL, 0, &errorMessage);
 
-    if (exit != SQLITE_OK) {
+    if (result != SQLITE_OK) {
       std::cerr << "Error Creating Table: " << errorMessage << std::endl;
       sqlite3_free(errorMessage);
     }
@@ -36,7 +46,8 @@ void initDatabase(sqlite3*& db) {
 
 // Service layer: Handles business logic
 bool registerUserService(const std::string& username,
-                         const std::string& password, AuthRepository& repo) {
+                         const std::string& password,
+                         const AuthRepository& repo) {
   // Validation
   if (username.empty() || password.empty()) {
     return false;
@@ -48,16 +59,16 @@ bool registerUserService(const std::string& username,
   }
 
   // Hash password and save
-  long long int hashed_pw = generateHash(password);
-  return repo.saveUser(username, hashed_pw);
+  sqlite3_int64 passwordHash = generateHash(password);
+  return repo.saveUser(username, passwordHash);
 }
 
 bool loginUserService(const std::string& username, const std::string& password,
-                      AuthRepository& repo) {
+                      const AuthRepository& repo) {
   if (username.empty() || password.empty()) {
     return false;
   }
 
-  long long int hashed_pw = generateHash(password);
-  return repo.authenticateUser(username, hashed_pw);
+  sqlite3_int64 passwordHash = generateHash(password);
+  return repo.authenticateUser(username, passwordHash);
 }

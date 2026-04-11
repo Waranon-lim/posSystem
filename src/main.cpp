@@ -1,6 +1,7 @@
 #include <sqlite3.h>
 
 #include <iostream>
+#include <memory>
 
 #include "db/auth_repository.h"
 #include "services/auth.h"
@@ -10,11 +11,16 @@
 using namespace std;
 
 sqlite3* db = nullptr;
-AuthRepository* g_authRepo = nullptr;
+std::unique_ptr<AuthRepository> g_authRepo;  // Smart pointer: auto cleanup
 
 int main() {
   initDatabase(db);
-  g_authRepo = new AuthRepository(db);
+  if (!db) {
+    std::cerr << "Failed to initialize database" << std::endl;
+    return 1;
+  }
+
+  g_authRepo = std::make_unique<AuthRepository>(db);
 
   while (true) {
     showMenu();
@@ -27,8 +33,8 @@ int main() {
         loginFlow();
         break;
       case 3:
-        cout << "---your loging out---";
-        if (g_authRepo != nullptr) delete g_authRepo;
+        cout << "---your logging out---";
+        g_authRepo.reset();  // Explicitly cleanup
         sqlite3_close(db);
         return 0;
     }

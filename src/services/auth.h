@@ -7,10 +7,15 @@
 
 // Service layer - handles business logic
 void initDatabase(sqlite3*& db);
-long long int generateHash(std::string password);
+sqlite3_int64 generateHash(const std::string& password);
+
+// Username check exposed to UI via service layer (UI -> Service -> Repository)
+bool isUserExistsService(const std::string& username,
+                         const AuthRepository& repo);
 
 // Service functions called by UI layer
 bool registerUserService(const std::string& username,
-                         const std::string& password, AuthRepository& repo);
+                         const std::string& password,
+                         const AuthRepository& repo);
 bool loginUserService(const std::string& username, const std::string& password,
-                      AuthRepository& repo);
+                      const AuthRepository& repo);
