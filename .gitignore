@@ -43,5 +43,6 @@ user.db
 pos_system
 test
 *.db
+/app
 
 # End of https://www.toptal.com/developers/gitignore/api/c++
