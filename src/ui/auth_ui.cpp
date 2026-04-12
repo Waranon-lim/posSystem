@@ -3,9 +3,22 @@
 #include <iostream>
 
 #include "../services/auth.h"
+#include "ui/Dashboard_ui.h"
 
 // Global reference to repo - defined in main.cpp
 extern std::unique_ptr<AuthRepository> g_authRepo;
+
+namespace {
+void printAuthHint() {
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Type 'back' to return to the main menu." << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+}
+
+bool isBackCommand(const std::string& input) {
+  return input == "back" || input == "Back";
+}
+}  // namespace
 
 std::string promptForUsername() {
   std::string username;
@@ -28,37 +41,33 @@ void registerAccount() {
   }
 
   std::string username, password, confirmPassword;
-  bool nameExists = false;
-
-  do {
-    std::cout << "------------------------------------------" << std::endl;
-    std::cout << "  TIP: type 'back' to return to main menu " << std::endl;
-    std::cout << "------------------------------------------" << std::endl;
-
+  while (true) {
+    printAuthHint();
     username = promptForUsername();
-    if (username == "back" || username == "Back") return;
-
-    nameExists = isUserExistsService(username, *g_authRepo);
-    if (nameExists) {
-      std::cout << "This name already exists, please try again." << std::endl;
+    if (isBackCommand(username)) {
+      return;
     }
-  } while (nameExists);
 
-  do {
+    if (isUserExistsService(username, *g_authRepo)) {
+      std::cout << "This name already exists, please try again." << std::endl;
+      continue;
+    }
+
     password = promptForPassword();
     std::cout << "Confirm your password : ";
     std::cin >> confirmPassword;
 
     if (password != confirmPassword) {
       std::cout << "Passwords do not match, please try again." << std::endl;
+      continue;
     }
-  } while (password != confirmPassword);
 
-  // Call service layer
-  if (registerUserService(username, password, *g_authRepo)) {
-    std::cout << "Success! Your account has been created: " << username
-              << std::endl;
-  } else {
+    if (registerUserService(username, password, *g_authRepo)) {
+      std::cout << "Success! Your account has been created: " << username
+                << std::endl;
+      return;
+    }
+
     std::cout << "Registration failed. Please try again." << std::endl;
   }
 }
@@ -73,20 +82,21 @@ void loginFlow() {
   std::string username, password;
 
   while (!loginSuccess) {
-    std::cout << "------------------------------------------" << std::endl;
-    std::cout << "  TIP: type 'back' to return to main menu " << std::endl;
-    std::cout << "------------------------------------------" << std::endl;
-    std::cout << "----- login page -----" << std::endl;
+    printAuthHint();
+    std::cout << "Login" << std::endl;
 
     username = promptForUsername();
-    if (username == "back" || username == "Back") return;
+    if (isBackCommand(username)) {
+      return;
+    }
 
     password = promptForPassword();
 
-    // Call service layer
-    if (loginUserService(username, password, *g_authRepo)) {
+    std::string role = loginUserService(username, password, *g_authRepo);
+    if (role != "fail") {
       std::cout << "welcome " << username << std::endl;
       loginSuccess = true;
+      displayMainMenu(username);
     } else {
       std::cout << "username or password incorrect" << std::endl;
     }
