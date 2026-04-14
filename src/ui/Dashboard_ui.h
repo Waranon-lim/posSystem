@@ -4,5 +4,6 @@
 #include <string>
 
 void displayMainMenu(const std::string& ownerName);
+void displayCustomerService(const std::string& customerName);
 
 #endif

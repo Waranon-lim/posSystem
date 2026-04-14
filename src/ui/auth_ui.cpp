@@ -1,5 +1,6 @@
 #include "auth_ui.h"
 
+#include <cctype>
 #include <iostream>
 
 #include "../services/auth.h"
@@ -9,6 +10,8 @@
 extern std::unique_ptr<AuthRepository> g_authRepo;
 
 namespace {
+void clearScreen() { std::cout << "\033[2J\033[1;1H"; }
+
 void printAuthHint() {
   std::cout << "------------------------------------------" << std::endl;
   std::cout << "Type 'back' to return to the main menu." << std::endl;
@@ -42,6 +45,7 @@ void registerAccount() {
 
   std::string username, password, confirmPassword;
   while (true) {
+    clearScreen();
     printAuthHint();
     username = promptForUsername();
     if (isBackCommand(username)) {
@@ -50,6 +54,7 @@ void registerAccount() {
 
     if (isUserExistsService(username, *g_authRepo)) {
       std::cout << "This name already exists, please try again." << std::endl;
+      clearScreen();
       continue;
     }
 
@@ -59,6 +64,7 @@ void registerAccount() {
 
     if (password != confirmPassword) {
       std::cout << "Passwords do not match, please try again." << std::endl;
+      clearScreen();
       continue;
     }
 
@@ -69,6 +75,7 @@ void registerAccount() {
     }
 
     std::cout << "Registration failed. Please try again." << std::endl;
+    clearScreen();
   }
 }
 
@@ -82,6 +89,7 @@ void loginFlow() {
   std::string username, password;
 
   while (!loginSuccess) {
+    clearScreen();
     printAuthHint();
     std::cout << "Login" << std::endl;
 
@@ -96,9 +104,21 @@ void loginFlow() {
     if (role != "fail") {
       std::cout << "welcome " << username << std::endl;
       loginSuccess = true;
-      displayMainMenu(username);
+
+      // Convert role to lowercase for comparison
+      std::string lowerRole = role;
+      for (char& c : lowerRole) {
+        c = std::tolower(c);
+      }
+
+      if (lowerRole == "owner") {
+        displayMainMenu(username);
+      } else {
+        displayCustomerService(username);
+      }
     } else {
       std::cout << "username or password incorrect" << std::endl;
+      clearScreen();
     }
   }
 }
