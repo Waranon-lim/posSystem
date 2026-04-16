@@ -3,13 +3,19 @@
 
 #include <string>
 
-bool isNameExit(std::string username);
-void registerAccount();
-long long int generateHash(std::string password);
-void initDatabase();
+#include "../db/auth_repository.h"
 
-// -------------------------------login function -------------------------------
+// Service layer - handles business logic
+void initDatabase(sqlite3*& db);
+sqlite3_int64 generateHash(const std::string& password);
 
-void loginFlow(sqlite3* db);
-bool loginUser(sqlite3* db, const std::string& username,
-               long long int& password);
+// Username check exposed to UI via service layer (UI -> Service -> Repository)
+bool isUserExistsService(const std::string& username,
+                         const AuthRepository& repo);
+
+// Service functions called by UI layer
+bool registerUserService(const std::string& username,
+                         const std::string& password,
+                         const AuthRepository& repo);
+bool loginUserService(const std::string& username, const std::string& password,
+                      const AuthRepository& repo);
