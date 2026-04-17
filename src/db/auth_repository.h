@@ -12,12 +12,14 @@ class AuthRepository {
   // Check if username already exists
   bool isUserExists(const std::string& username) const;
 
-  // password_hash is stored as INTEGER in SQLite and passed as sqlite3_int64.
-  bool saveUser(const std::string& username, sqlite3_int64 passwordHash) const;
+  // In legacy schema, `password` stores user input and `password_hash` stores
+  // hash.
+  bool saveUser(const std::string& username, const std::string& password,
+                sqlite3_int64 passwordHash) const;
 
-  // Verify user credentials
-  bool authenticateUser(const std::string& username,
-                        sqlite3_int64 passwordHash) const;
+  // Verify user credentials and return role when success, or "fail".
+  std::string authenticateUser(const std::string& username,
+                               sqlite3_int64 passwordHash) const;
 
  private:
   sqlite3* db_;

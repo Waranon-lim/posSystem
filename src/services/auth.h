@@ -17,5 +17,6 @@ bool isUserExistsService(const std::string& username,
 bool registerUserService(const std::string& username,
                          const std::string& password,
                          const AuthRepository& repo);
-bool loginUserService(const std::string& username, const std::string& password,
-                      const AuthRepository& repo);
+std::string loginUserService(const std::string& username,
+                             const std::string& password,
+                             const AuthRepository& repo);

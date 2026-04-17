@@ -41,6 +41,45 @@ void initDatabase(sqlite3*& db) {
       std::cerr << "Error Creating Table: " << errorMessage << std::endl;
       sqlite3_free(errorMessage);
     }
+
+    // Backward-compatible migration for older databases that used `password`.
+    bool hasPasswordHash = false;
+    bool hasPassword = false;
+    sqlite3_stmt* columnStmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, "PRAGMA table_info(users);", -1, &columnStmt,
+                           nullptr) == SQLITE_OK) {
+      while (sqlite3_step(columnStmt) == SQLITE_ROW) {
+        const unsigned char* columnName = sqlite3_column_text(columnStmt, 1);
+        if (!columnName) continue;
+
+        std::string name = reinterpret_cast<const char*>(columnName);
+        if (name == "password_hash") hasPasswordHash = true;
+        if (name == "password") hasPassword = true;
+      }
+    }
+    sqlite3_finalize(columnStmt);
+
+    if (!hasPasswordHash) {
+      const char* addHashColumn =
+          "ALTER TABLE users ADD COLUMN password_hash INTEGER;";
+      if (sqlite3_exec(db, addHashColumn, NULL, 0, &errorMessage) !=
+          SQLITE_OK) {
+        std::cerr << "Error adding password_hash column: " << errorMessage
+                  << std::endl;
+        sqlite3_free(errorMessage);
+      } else if (hasPassword) {
+        const char* migrateHashData =
+            "UPDATE users SET password_hash = CAST(password AS INTEGER) "
+            "WHERE password_hash IS NULL;";
+        if (sqlite3_exec(db, migrateHashData, NULL, 0, &errorMessage) !=
+            SQLITE_OK) {
+          std::cerr << "Error migrating password values: " << errorMessage
+                    << std::endl;
+          sqlite3_free(errorMessage);
+        }
+      }
+    }
   }
 }
 
@@ -60,13 +99,14 @@ bool registerUserService(const std::string& username,
 
   // Hash password and save
   sqlite3_int64 passwordHash = generateHash(password);
-  return repo.saveUser(username, passwordHash);
+  return repo.saveUser(username, password, passwordHash);
 }
 
-bool loginUserService(const std::string& username, const std::string& password,
-                      const AuthRepository& repo) {
+std::string loginUserService(const std::string& username,
+                             const std::string& password,
+                             const AuthRepository& repo) {
   if (username.empty() || password.empty()) {
-    return false;
+    return "fail";
   }
 
   sqlite3_int64 passwordHash = generateHash(password);
