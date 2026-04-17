@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "../services/auth.h"
-#include "ui/Dashboard_ui.h"
+#include "Dashboard_ui.h"
 
 // Global reference to repo - defined in main.cpp
 extern std::unique_ptr<AuthRepository> g_authRepo;

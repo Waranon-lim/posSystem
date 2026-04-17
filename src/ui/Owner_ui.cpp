@@ -115,8 +115,22 @@ void printProducts(sqlite3* db) {
   }
 
   bool hasRows = false;
-  std::cout << "\nID | Name | Quantity | Price | Sell Price" << std::endl;
-  std::cout << "-----------------------------------------" << std::endl;
+  constexpr int kIdWidth = 4;
+  constexpr int kNameWidth = 18;
+  constexpr int kQtyWidth = 10;
+  constexpr int kPriceWidth = 10;
+  constexpr int kSellPriceWidth = 12;
+
+  std::cout << "\n"
+            << std::left << std::setw(kIdWidth) << "ID"
+            << " | " << std::setw(kNameWidth) << "Name"
+            << " | " << std::right << std::setw(kQtyWidth) << "Quantity"
+            << " | " << std::setw(kPriceWidth) << "Price"
+            << " | " << std::setw(kSellPriceWidth) << "Sell Price" << std::endl;
+  std::cout << std::string(kIdWidth + kNameWidth + kQtyWidth + kPriceWidth +
+                               kSellPriceWidth + 12,
+                           '-')
+            << std::endl;
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     hasRows = true;
@@ -126,9 +140,17 @@ void printProducts(sqlite3* db) {
     double price = sqlite3_column_double(stmt, 3);
     double sellPrice = sqlite3_column_double(stmt, 4);
 
-    std::cout << id << " | "
-              << (name ? reinterpret_cast<const char*>(name) : "") << " | "
-              << quantity << " | " << price << " | " << sellPrice << std::endl;
+    std::string productName = name ? reinterpret_cast<const char*>(name) : "";
+    if (productName.length() > static_cast<std::size_t>(kNameWidth)) {
+      productName = productName.substr(0, kNameWidth - 3) + "...";
+    }
+
+    std::cout << std::left << std::setw(kIdWidth) << id << " | "
+              << std::setw(kNameWidth) << productName << " | " << std::right
+              << std::setw(kQtyWidth) << quantity << " | "
+              << std::setw(kPriceWidth) << std::fixed << std::setprecision(2)
+              << price << " | " << std::setw(kSellPriceWidth) << sellPrice
+              << std::defaultfloat << std::endl;
   }
 
   if (!hasRows) {
@@ -567,9 +589,20 @@ void showSalesRows(sqlite3* sellDb, const std::string& whereClause,
     return;
   }
 
+  constexpr int kTimeWidth = 19;
+  constexpr int kProductWidth = 20;
+  constexpr int kQtyWidth = 10;
+  constexpr int kTotalSellWidth = 12;
+
   std::cout << "\n=== " << title << " ===" << std::endl;
-  std::cout << "Time | Product Name | Quantity | Total Sell" << std::endl;
-  std::cout << "-----------------------------------------" << std::endl;
+  std::cout << std::left << std::setw(kTimeWidth) << "Time"
+            << " | " << std::setw(kProductWidth) << "Product Name"
+            << " | " << std::right << std::setw(kQtyWidth) << "Quantity"
+            << " | " << std::setw(kTotalSellWidth) << "Total Sell" << std::endl;
+  std::cout << std::string(
+                   kTimeWidth + kProductWidth + kQtyWidth + kTotalSellWidth + 9,
+                   '-')
+            << std::endl;
 
   bool hasRows = false;
   while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -579,10 +612,20 @@ void showSalesRows(sqlite3* sellDb, const std::string& whereClause,
     int quantity = sqlite3_column_int(stmt, 2);
     double totalSell = sqlite3_column_double(stmt, 3);
 
-    std::cout << (timeText ? reinterpret_cast<const char*>(timeText) : "")
-              << " | "
-              << (productName ? reinterpret_cast<const char*>(productName) : "")
-              << " | " << quantity << " | " << totalSell << std::endl;
+    std::string timeValue =
+        timeText ? reinterpret_cast<const char*>(timeText) : "";
+    std::string productValue =
+        productName ? reinterpret_cast<const char*>(productName) : "";
+    if (productValue.length() > static_cast<std::size_t>(kProductWidth)) {
+      productValue = productValue.substr(0, kProductWidth - 3) + "...";
+    }
+
+    std::cout << std::left << std::setw(kTimeWidth) << timeValue << " | "
+              << std::setw(kProductWidth) << productValue << " | " << std::right
+              << std::setw(kQtyWidth) << quantity << " | "
+              << std::setw(kTotalSellWidth) << std::fixed
+              << std::setprecision(2) << totalSell << std::defaultfloat
+              << std::endl;
   }
 
   if (!hasRows) {
